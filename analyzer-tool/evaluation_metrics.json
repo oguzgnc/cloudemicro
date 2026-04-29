@@ -1,0 +1,75 @@
+{
+  "clusters": {
+    "0": {
+      "clusterId": 0,
+      "total_deps": 10,
+      "internal_deps": 8,
+      "external_deps": 2,
+      "cohesion": 0.8
+    },
+    "1": {
+      "clusterId": 1,
+      "total_deps": 9,
+      "internal_deps": 7,
+      "external_deps": 2,
+      "cohesion": 0.7778
+    },
+    "2": {
+      "clusterId": 2,
+      "total_deps": 3,
+      "internal_deps": 3,
+      "external_deps": 0,
+      "cohesion": 1
+    },
+    "3": {
+      "clusterId": 3,
+      "total_deps": 11,
+      "internal_deps": 5,
+      "external_deps": 6,
+      "cohesion": 0.4545
+    },
+    "4": {
+      "clusterId": 4,
+      "total_deps": 23,
+      "internal_deps": 7,
+      "external_deps": 16,
+      "cohesion": 0.3043
+    }
+  },
+  "coupling_directed": {
+    "0": {
+      "1": 1,
+      "2": 1
+    },
+    "1": {
+      "0": 2
+    },
+    "3": {
+      "0": 5,
+      "1": 1
+    },
+    "4": {
+      "0": 6,
+      "1": 6,
+      "2": 3,
+      "3": 1
+    }
+  },
+  "coupling_undirected": {
+    "0<->1": 3,
+    "0<->2": 1,
+    "0<->3": 5,
+    "1<->3": 1,
+    "0<->4": 6,
+    "1<->4": 6,
+    "2<->4": 3,
+    "3<->4": 1
+  },
+  "totals": {
+    "total_edges": 56,
+    "total_external_edges": 26
+  },
+  "average_cohesion": 0.6673,
+  "coupling_penalty": 0.4643,
+  "MQ": 0.203
+}
