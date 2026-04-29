@@ -6,6 +6,7 @@ const RESOLUTIONS = [0.5, 0.8, 1.0, 1.2, 1.5, 2.0]
 
 export default function App() {
   const [resolution, setResolution] = useState(0.5)
+  const [dynamicTrafficEnabled, setDynamicTrafficEnabled] = useState(false)
   const exportRef = useRef(null)
   const metricsRef = useRef(null)
   const legendRef = useRef(null)
@@ -27,12 +28,20 @@ export default function App() {
               ))}
             </select>
           </label>
+          <button
+            className={`btn-toggle${dynamicTrafficEnabled ? ' active' : ''}`}
+            onClick={() => setDynamicTrafficEnabled(enabled => !enabled)}
+            aria-pressed={dynamicTrafficEnabled}
+          >
+            Toggle Dynamic Traffic View
+          </button>
           <button className="btn-export" onClick={handleExport}>Download PNG</button>
         </div>
       </header>
       <main className="app-main">
         <GraphView 
           resolution={resolution} 
+          dynamicTrafficEnabled={dynamicTrafficEnabled}
           onExport={fn => { exportRef.current = fn }}
           metricsRef={metricsRef}
           legendRef={legendRef}

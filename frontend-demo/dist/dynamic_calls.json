@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "totalCalls": 150,
+    "totalCallFrequency": 150,
+    "uniqueSourceClasses": 5,
+    "uniqueTargetClasses": 5,
+    "timestamp": 1777496017648
+  },
+  "calls": [
+    {"caller": "org.mybatis.jpetstore.web.actions.CatalogActionBean", "callee": "org.mybatis.jpetstore.service.CatalogService", "count": 45},
+    {"caller": "org.mybatis.jpetstore.web.actions.CartActionBean", "callee": "org.mybatis.jpetstore.service.CatalogService", "count": 22},
+    {"caller": "org.mybatis.jpetstore.service.CatalogService", "callee": "org.mybatis.jpetstore.mapper.ProductMapper", "count": 38},
+    {"caller": "org.mybatis.jpetstore.service.CatalogService", "callee": "org.mybatis.jpetstore.mapper.ItemMapper", "count": 55},
+    {"caller": "org.mybatis.jpetstore.web.actions.OrderActionBean", "callee": "org.mybatis.jpetstore.service.OrderService", "count": 12}
+  ]
+}

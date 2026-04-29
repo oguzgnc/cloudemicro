@@ -1,0 +1,11 @@
+{
+  "resolution": 1.2,
+  "numClusters": 4,
+  "cohesion": 0.6384,
+  "coupling": 0.3571,
+  "MQ": 0.2813,
+  "totals": {
+    "total_edges": 56,
+    "total_external_edges": 20
+  }
+}

@@ -3,7 +3,7 @@ import ForceGraph2D from 'react-force-graph-2d'
 import * as d3 from 'd3'
 import './App.css'
 
-export default function GraphView({ resolution, onExport, metricsRef, legendRef }) {
+export default function GraphView({ resolution, dynamicTrafficEnabled, onExport, metricsRef, legendRef }) {
   const fgRef = useRef()
   const [data, setData] = useState({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
@@ -17,6 +17,8 @@ export default function GraphView({ resolution, onExport, metricsRef, legendRef 
       try {
         const depsResp = await fetch('/dependencies.json')
         const deps = await depsResp.json()
+        const dynamicResp = await fetch('/dynamic_calls.json')
+        const dynamicCalls = dynamicResp.ok ? await dynamicResp.json() : { calls: [] }
 
         const clusterFile = resolution ? `/clusters_res_${String(resolution)}.json` : '/clustered_results.json'
         const metricsFile = resolution ? `/metrics_res_${String(resolution)}.json` : '/metrics_res_default.json'
@@ -39,6 +41,16 @@ export default function GraphView({ resolution, onExport, metricsRef, legendRef 
           setMetrics(null)
         }
 
+        const dynamicLinkMap = new Map()
+        const dynamicCallList = Array.isArray(dynamicCalls.calls) ? dynamicCalls.calls : []
+        let maxDynamicCount = 0
+        for (const call of dynamicCallList) {
+          const key = `${call.caller}|||${call.callee}`
+          const count = Number(call.count) || 0
+          dynamicLinkMap.set(key, count)
+          if (count > maxDynamicCount) maxDynamicCount = count
+        }
+
         const nodesMap = new Map()
         Object.keys(deps).forEach(src => {
           if (!nodesMap.has(src)) nodesMap.set(src, { id: src })
@@ -55,7 +67,17 @@ export default function GraphView({ resolution, onExport, metricsRef, legendRef 
         const nodes = Array.from(nodesMap.values())
         const links = []
         for (const [src, targets] of Object.entries(deps)) {
-          for (const t of targets) links.push({ source: src, target: t })
+          for (const t of targets) {
+            const count = dynamicLinkMap.get(`${src}|||${t}`) || 0
+            const intensity = maxDynamicCount > 0 ? count / maxDynamicCount : 0
+            links.push({
+              source: src,
+              target: t,
+              count,
+              intensity,
+              isHot: count > 0 && intensity >= 0.6
+            })
+          }
         }
 
         const clusterIds = Array.from(new Set(nodes.map(n => n.cluster).filter(c => c !== null)))
@@ -206,6 +228,45 @@ export default function GraphView({ resolution, onExport, metricsRef, legendRef 
     }
   }
 
+  const getLinkWidth = useCallback((link) => {
+    if (!dynamicTrafficEnabled) return 1.5
+    const count = Number(link.count) || 0
+    if (count <= 0) return 1.2
+    return 1.2 + Math.min(6, Math.sqrt(count) * 0.85)
+  }, [dynamicTrafficEnabled])
+
+  const getLinkColor = useCallback((link) => {
+    if (!dynamicTrafficEnabled || !link.count) return 'rgba(100, 116, 139, 0.4)'
+    if ((link.intensity || 0) >= 0.6) return 'rgba(14, 165, 233, 0.95)'
+    if ((link.intensity || 0) >= 0.3) return 'rgba(59, 130, 246, 0.7)'
+    return 'rgba(96, 165, 250, 0.45)'
+  }, [dynamicTrafficEnabled])
+
+  const drawTrafficGlow = useCallback((link, ctx, globalScale) => {
+    if (!dynamicTrafficEnabled || !link.count || !link.isHot) return
+    if (!link.source || !link.target || typeof link.source.x !== 'number' || typeof link.target.x !== 'number') return
+
+    const sourceX = link.source.x
+    const sourceY = link.source.y
+    const targetX = link.target.x
+    const targetY = link.target.y
+    const intensity = link.intensity || 0
+    const glowWidth = Math.max(2, getLinkWidth(link) + 2)
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(sourceX, sourceY)
+    ctx.lineTo(targetX, targetY)
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.75)'
+    ctx.lineWidth = glowWidth / Math.max(0.75, globalScale)
+    ctx.globalAlpha = 0.35 + intensity * 0.45
+    ctx.shadowBlur = 18 + intensity * 22
+    ctx.shadowColor = 'rgba(34, 211, 238, 0.9)'
+    ctx.filter = 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.75))'
+    ctx.stroke()
+    ctx.restore()
+  }, [dynamicTrafficEnabled, getLinkWidth])
+
   if (loading) {
     return <div className="loading-container">Loading microservice graph...</div>
   }
@@ -267,8 +328,10 @@ export default function GraphView({ resolution, onExport, metricsRef, legendRef 
         }}
         linkDirectionalArrowLength={4}
         linkDirectionalArrowRelPos={1}
-        linkWidth={1.5}
-        linkColor={() => 'rgba(100, 116, 139, 0.4)'}
+        linkWidth={getLinkWidth}
+        linkColor={getLinkColor}
+        linkCanvasObject={drawTrafficGlow}
+        linkCanvasObjectMode="after"
         cooldownTicks={100}
         onNodeClick={handleNodeClick}
         onBackgroundClick={() => setHighlightedNodes(new Set())}
